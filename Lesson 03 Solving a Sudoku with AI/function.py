@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import sys
+
 from utils import *
 
 def eliminate_one(values, unit_keys, target):
@@ -116,6 +118,42 @@ def reduce_puzzle(values):
             return False
     return values
 
+reduce_puzzle_counter = 0
+search_depth = 0
+
+def search(values):
+    global search_depth
+    search_depth += 1
+#    print("search_depth: %d" % search_depth)
+
+    "Using depth-first search and propagation, create a search tree and solve the sudoku."
+    # First, reduce the puzzle using the previous function
+    values = reduce_puzzle(values)
+    if values is False:
+        search_depth -= 1
+        return False
+    if all(len(values[s]) == 1 for s in boxes):
+        search_depth -= 1
+        return values
+
+    # Choose one of the unfilled squares with the fewest possibilities
+#    print("%s" % [(s, len(values[s])) for s in boxes if len(values[s]) > 1])
+#    n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
+    s,n = min((s, len(values[s])) for s in boxes if len(values[s]) > 1)
+#    print("n: %s, s: %s" % (n,s))
+
+    # Now use recursion to solve each one of the resulting sudokus, and if one returns a value (not False), return that answer!
+    for value in values[s]:
+        attempt_values = values.copy()
+        attempt_values[s] = value
+        attempt = search(attempt_values)
+        if attempt:
+            search_depth -= 1
+            return attempt
+    # If you're stuck, see the solution.py tab!
+    search_depth -= 1
+    return False
+    
 if __name__ == '__main__':
     grid = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
     # harder Sudoku
@@ -125,5 +163,7 @@ if __name__ == '__main__':
     values = grid_values(grid)
     display(values)
 
-    values = reduce_puzzle(values)
+    print("search:")
+    values = search(values)
     display(values)
+
